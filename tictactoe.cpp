@@ -6,12 +6,15 @@
 #define BRD_Y 100
 #define BRD_D 50
 
+// Note: I have used eight sums to check winner but, we can make a magic square to make a total of 15 too ! 
 struct Board{
     char positions[3][3] = {
                             {'_', '_', '_'}, 
-                            {'_', 'X', '_'}, 
-                            {'O', '_', '_'}
+                            {'_', '_', '_'}, 
+                            {'_', '_', '_'}
                            } ;
+    int r[3], c[3], d[2] ; // R1-R2-R3-C1-C2-C3-D1-D2
+    int vacant = 9 ;
 } ;
 
 void printBoardState(struct Board b){
@@ -20,6 +23,16 @@ void printBoardState(struct Board b){
         if(i != 2) std::cout << "---------" << std::endl ;
     }
     std::cout << "--------------------------------------------------------------" << std::endl ;
+}
+
+char checkWinner(struct Board board){
+    for(int i=0; i<3; i++){
+        if(board.r[i] == 3 || board.c[i] == 3 || (i != 2 && board.d[i] == 3))
+            return 'X' ;
+        else if(board.r[i] == 12 || board.c[i] == 12 || (i != 2 && board.d[i] == 12))
+            return 'O' ;
+    }
+    return '?' ;
 }
 
 int main(int argc, char *argv[]){
@@ -31,7 +44,8 @@ int main(int argc, char *argv[]){
     SDL_Rect tempRect ;
     struct Board board ;
     int mouseX, mouseY ;
-    char turn, wait, temp ;
+    int placePosX, placePosY ;
+    char turn, wait, temp, value ;
 
     if(argc < 2){
         std::cerr << "Choose who starts first: RED (X) or BLUE (O) !! [X/O] ?" << std::endl ;
@@ -55,14 +69,45 @@ int main(int argc, char *argv[]){
             else if(event.type == SDL_MOUSEBUTTONDOWN){ 
                 if(mouseX > BRD_X && mouseY > BRD_Y && mouseX < (BRD_X+BRD_D*3) && mouseY < (BRD_Y+BRD_D*3)){
                     // Within the bounds
-                    board.positions[(mouseY-BRD_Y)/BRD_D][(mouseX-BRD_X)/BRD_D] = turn ;
-                    temp = turn ;
-                    turn = wait ;
-                    wait = temp ;
+                    placePosX = (mouseY-BRD_Y)/BRD_D ;
+                    placePosY = (mouseX-BRD_X)/BRD_D ;
+                    board.positions[placePosX][placePosY] = turn ;
+                    board.vacant -= 1 ;
+                    // Set value counts for checking winner
+                    if(turn == 'X') value = 1 ;
+                    else if(turn == 'O') value = 4 ;
+                    board.r[placePosX] += value ;
+                    board.c[placePosY] += value ;
+                    if(placePosX == placePosY){
+                        board.d[0] += value ;
+                    }
+                    else if(placePosX+placePosY == 2){
+                        board.d[1] += value ;
+                    }
+                    // Declare or swap turns
+                    temp = checkWinner(board) ;
+                    if(board.vacant == 0){
+                        if(temp == '?')
+                            std::cout << "Winner Decision: " << "<DRAW>" << std::endl ;
+                        else
+                            std::cout << "Winner Decision: " << temp << std::endl ;
+                        isProgramActive = false ;
+                    }
+                    else{
+                        if(temp == '?'){
+                            temp = turn ;
+                            turn = wait ;
+                            wait = temp ;
+                            std::cout << "Turn: " << turn << std::endl ;
+                            std::cout << "Wait: " << wait << std::endl ;
+                        }
+                        else{
+                            std::cout << "Winner Decision: " << temp << std::endl ;
+                            isProgramActive = false ;
+                        }
+                    }
                 }
                 printBoardState(board) ;
-                std::cout << "Turn: " << turn << std::endl ;
-                std::cout << "Wait: " << wait << std::endl ;
             }
         } 
 
