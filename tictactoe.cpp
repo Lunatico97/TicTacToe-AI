@@ -7,6 +7,8 @@
 #define BRD_D 50
 
 // Note: I have used eight sums to check winner but, we can make a magic square to make a total of 15 too ! 
+// But the ultimate thing to make sure is to avoid nested iterative checks for match-3's since, that will be the worst way to check it !
+
 struct Board{
     char positions[3][3] = {
                             {'_', '_', '_'}, 
